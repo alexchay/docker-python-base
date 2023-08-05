@@ -1,0 +1,128 @@
+workflow:
+  rules:
+    # runs branch and merge request pipelines only
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_OPEN_MERGE_REQUESTS && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH !~ /^(fix|feat).*/ && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^(devel|feat).*/
+
+stages:
+  - validate
+  - build
+  - test
+  - release
+  - cleanup
+
+include:
+  - project: '$GITLAB_CI_PATH'
+    ref: '$GITLAB_CI_REF_NAME'
+    file: '/ext/.gitlab-ci_.yml'
+  - project: '$GITLAB_CI_PATH'
+    ref: '$GITLAB_CI_REF_NAME'
+    file: '/ext/.build_docker_image.yml'
+
+
+#### Templates
+.job_template:
+  image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}/gitlab-ci:$GITLAB_CI_REF_NAME
+  tags:
+    - docker-ansible
+
+
+variables:
+  # pulling only the current commit, not the whole git history
+  GIT_DEPTH: 1
+  # filesystem for the Docker build, which is faster and less space consuming
+  DOCKER_DRIVER: overlay2
+  BUILD_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+  BRANCH_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$DOCKER_IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  RELEASE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$DOCKER_IMAGE_NAME:$CI_COMMIT_TAG
+  DOCKER_CACHE: "true"
+  # When TLS is enabled, the Docker daemon will be started with --host=tcp://0.0.0.0:2376
+  DOCKER_HOST: tcp://docker:2376
+
+
+
+prepare:
+  extends:
+    - .job_template
+    - .prepare_vault
+  stage: .pre
+  script:
+    - echo "Preparing environment for Vault"
+
+build_image:
+  extends:
+    - .build_image
+  needs:
+    - job: prepare
+      artifacts: true
+  script:
+    - >-
+      docker build
+      --build-arg HTTP_PROXY
+      --build-arg HTTPS_PROXY
+      --build-arg NO_PROXY
+      --build-arg PACKER_SOURCE
+      --build-arg PACKER_VERSION
+      --build-arg PACKER_SHA256SUM
+      --build-arg OVFTOOL_SOURCE
+      --build-arg OVFTOOL_BUNDLE
+      --build-arg OVFTOOL_SHA256SUM
+      --build-arg CI_REGISTRY=$CI_REGISTRY/$CI_REGISTRY_PATH
+      --cache-from $BRANCH_IMAGE
+      --progress plain -t $BUILD_IMAGE .
+    - docker push $BUILD_IMAGE
+  dependencies:
+    - prepare
+
+test:
+  extends:
+    - .test
+  script:
+    - pwd
+    - packer version
+    - ovftool --version
+  variables:
+    GIT_STRATEGY: none
+
+release_branch:
+  extends:
+    - .release
+  dependencies:
+    - prepare
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+release_tag:
+  extends:
+    - .release
+  dependencies:
+    - prepare
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - curl -4 --location --output /usr/local/bin/release-cli "https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-linux-amd64" && chmod +x /usr/local/bin/release-cli
+    - release-cli -v
+    - docker pull $BUILD_IMAGE
+    - docker tag $BUILD_IMAGE $RELEASE_IMAGE && docker push $RELEASE_IMAGE
+  release:
+    name: "$CI_COMMIT_TAG"
+    tag_name: "$CI_COMMIT_TAG"
+    description: "$RELEASE_IMAGE"
+    ref: "$CI_COMMIT_TAG"
+
+
+cleanup_build:
+  extends:
+    - .cleanup_build
+  dependencies:
+    - prepare
+
+
+
+
+
