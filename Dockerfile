@@ -30,7 +30,7 @@ ENV PYTHONWARNINGS="ignore:Unverified HTTPS request" \
     # make python requests use the system ca-certificates bundle
     REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     HOME=/home/$USERNAME \
-    PATH=$HOME/.local/bin:$PATH
+    PATH=/home/$USERNAME/.local/bin:$PATH
 
 WORKDIR $HOME
 # default command: display Python version

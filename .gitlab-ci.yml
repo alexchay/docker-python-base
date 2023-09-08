@@ -61,8 +61,16 @@ test:
     - pwd
     - python --version
     - |
+      # check that Python version is correct
       if [ $(python --version | awk 'NR==1{print $2}' |  cut -d '.' -f 1,2) != $PYTHON_VERSION ]; then
           echo Python version does not match $PYTHON_VERSION
+          exit 1
+      fi
+    - echo $PATH
+    - |
+      # check that /home/$USERNAME/.local/bin is in PATH
+      if [[ ! "$PATH" =~ "/home/$USERNAME/.local/bin" ]]; then
+          echo "/home/$USERNAME/.local/bin is not in PATH"
           exit 1
       fi
   variables:
