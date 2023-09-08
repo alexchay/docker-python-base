@@ -17,7 +17,6 @@ RUN \
     && chown -R :$USERNAME /usr/local/share/ca-certificates/
 
 USER $USERNAME
-WORKDIR /home/$USERNAME
 
 # disable warnings when not verifying SSL certificate
 ENV PYTHONWARNINGS="ignore:Unverified HTTPS request" \
@@ -30,7 +29,9 @@ ENV PYTHONWARNINGS="ignore:Unverified HTTPS request" \
     PYTHONPATH=/home/user/.local/lib/python*/site-packages/ \
     # make python requests use the system ca-certificates bundle
     REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
-    PATH=/home/$USERNAME/.local/bin:$PATH
+    HOME=/home/$USERNAME \
+    PATH=$HOME/.local/bin:$PATH
 
+WORKDIR $HOME
 # default command: display Python version
 CMD [ "python", "--version" ]
