@@ -6,13 +6,22 @@ tasks:
   build-image:
     desc: Build docker image
     cmds:
-      - >
-        export `cat .env_dev` && docker build
-        --build-arg HTTP_PROXY
-        --build-arg HTTPS_PROXY
-        --build-arg NO_PROXY
-        --build-arg CI_REGISTRY
-        --progress plain
+      - |
+        ref_name=$(git rev-parse --abbrev-ref HEAD)
+        ##  If the repository is in a detached HEAD state (not on any branch), this command will fail or return HEAD.
+        if [ -z "$ref_name" ] || [ "$ref_name" = "HEAD" ]; then
+          ref_name=$(git describe --tags)
+        fi
+        export PYTHON_BASE_IMAGE_TAG=$ref_name
+        echo "Build from base image with tag="$PYTHON_BASE_IMAGE_TAG
+        export `cat .env_dev` && \
+        docker build \
+        --build-arg HTTP_PROXY  \
+        --build-arg HTTPS_PROXY \
+        --build-arg NO_PROXY    \
+        --build-arg CI_REGISTRY \
+        --build-arg PYTHON_BASE_IMAGE_TAG \
+        --progress plain \
         -t python-base .
 
   test-image:
@@ -20,4 +29,3 @@ tasks:
     cmds:
       - task: build-image
       - docker run --rm -it python-base bash -c "python --version"
-

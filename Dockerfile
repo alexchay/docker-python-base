@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_TAG=3.9-slim-bullseye
+ARG PYTHON_BASE_IMAGE_TAG
 FROM python:$PYTHON_BASE_IMAGE_TAG
 
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
