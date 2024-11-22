@@ -1,9 +1,9 @@
-ARG PYTHON_BASE_IMAGE_TAG
+ARG PYTHON_BASE_IMAGE_TAG=none
 FROM python:$PYTHON_BASE_IMAGE_TAG
 
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 ENV USERNAME=user
 
 # add ca certificates
