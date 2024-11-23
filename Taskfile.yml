@@ -1,8 +1,11 @@
 # https://taskfile.dev
 version: "3"
+vars:
+  DOCKER_BUILD_ARGS: >-
+    --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
+    --build-arg CI_REGISTRY
 
 tasks:
-
   build-image:
     desc: Build docker image
     cmds:
@@ -15,14 +18,17 @@ tasks:
         export PYTHON_BASE_IMAGE_TAG=$ref_name
         echo "Build from base image with tag="$PYTHON_BASE_IMAGE_TAG
         export `cat .env_dev` && \
-        docker build \
-        --build-arg HTTP_PROXY  \
-        --build-arg HTTPS_PROXY \
-        --build-arg NO_PROXY    \
-        --build-arg CI_REGISTRY \
+        docker build {{.DOCKER_BUILD_ARGS}} \
         --build-arg PYTHON_BASE_IMAGE_TAG \
         --progress plain \
         -t python-base .
+
+  rebuild-image:
+    desc: ReBuild docker image
+    cmds:
+      - task: build-image
+        vars:
+          DOCKER_BUILD_ARGS: '{{.DOCKER_BUILD_ARGS}} --no-cache'
 
   test-image:
     desc: Test docker image
