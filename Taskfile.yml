@@ -44,3 +44,18 @@ tasks:
           -v $(pwd):/app
           hadolint/hadolint:latest-alpine
           sh -c 'hadolint --version && cd app && echo "Checking..." && hadolint Dockerfile && echo "Done"'
+
+  shell-check:
+    desc: Run static analysis tool (linter) for shell scripts
+    cmds:
+      - >-
+          docker run --rm -it
+          -v $(pwd):/app
+          koalaman/shellcheck-alpine:latest
+          sh -c 'shellcheck --version && cd app && echo "Checking..." && shellcheck scripts/*.sh && echo "Done"'
+
+  static-analysis:
+    desc: Run code formatter check, linting, static type analysis
+    cmds:
+      - task: shell-check
+      - task: dockerfile-check
