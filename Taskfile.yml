@@ -15,12 +15,12 @@ tasks:
     desc: Build docker image
     cmds:
       - |
-        echo "Build from base image with tag="$PYTHON_BASE_IMAGE_TAG
+        echo "Build from base image with tag={{.PYTHON_BASE_IMAGE_TAG}}"
         export `cat .env_dev` && \
         docker build {{.DOCKER_BUILD_ARGS}} \
-        --build-arg PYTHON_BASE_IMAGE_TAG \
+        --build-arg PYTHON_BASE_IMAGE_TAG={{.PYTHON_BASE_IMAGE_TAG}} \
         --progress plain \
-        -t python-base:$PYTHON_BASE_IMAGE_TAG .
+        -t python-base:{{.PYTHON_BASE_IMAGE_TAG}} .
 
   rebuild-image:
     desc: ReBuild docker image
@@ -34,10 +34,10 @@ tasks:
     cmds:
       - task: build-image
       - |
-        export PYTHON_VERSION=$(echo $PYTHON_BASE_IMAGE_TAG| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
+        export PYTHON_VERSION=$(echo {{.PYTHON_BASE_IMAGE_TAG}}| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
         docker run --rm -it {{.DOCKER_RUN_ARGS}} \
         --env-file=.env_dev -e PYTHON_VERSION \
-        python-base:$PYTHON_BASE_IMAGE_TAG bash \
+        python-base:{{.PYTHON_BASE_IMAGE_TAG}} bash \
         -c "cd build && ./scripts/check_python_version.sh"
 
   dockerfile-check:
