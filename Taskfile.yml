@@ -2,7 +2,7 @@
 version: "3"
 vars:
   PYTHON_BASE_IMAGE_TAG:
-    sh: ref_name=$(git rev-parse --abbrev-ref HEAD); if [ -z "$ref_name" ] || [ "$ref_name" = "HEAD" ]; then ref_name=$(git describe --tags); fi; echo $ref_name
+    sh: ref_name=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/HEAD detached at //' -e 's/* (\(.*\))/\1/' -e 's/* \(.*\)/\1/'); echo $ref_name;
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY

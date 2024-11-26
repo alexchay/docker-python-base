@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_TAG=none
+ARG PYTHON_BASE_IMAGE_TAG="defval"
 FROM python:$PYTHON_BASE_IMAGE_TAG
 
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
