@@ -7,7 +7,7 @@ vars:
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY
   DOCKER_RUN_ARGS: >-
-    -e HTTP_PROXY=$HTTP_PROXY -e HTTPS_PROXY=$HTTPS_PROXY -e NO_PROXY=$NO_PROXY
+    -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY
     -v $(pwd)/:/home/user/build/
 
 tasks:
