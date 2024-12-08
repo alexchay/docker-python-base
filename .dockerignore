@@ -1,5 +1,5 @@
 .git
-.env_*
+.dev.env_*
 .gitignore
 .gitlab-ci.yml
 build/
