@@ -1,8 +1,15 @@
 # https://taskfile.dev
 version: "3"
 vars:
+  PYTHON_BASE_IMAGE_TAG_DEFAULT: 3.9-slim
   PYTHON_BASE_IMAGE_TAG:
-    sh: ref_name=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/HEAD detached at //' -e 's/* (\(.*\))/\1/' -e 's/* \(.*\)/\1/'); echo $ref_name;
+    sh: |
+      ref_name=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/HEAD detached at //' -e 's/* (\(.*\))/\1/' -e 's/* \(.*\)/\1/');
+      if [ "$ref_name" = "master" ] || [ "$ref_name" = "main" ]; then
+        echo "{{.PYTHON_BASE_IMAGE_TAG_DEFAULT}}";
+      else
+        echo "$ref_name";
+      fi
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY
