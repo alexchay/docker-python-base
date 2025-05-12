@@ -3,6 +3,9 @@ description: Build and push Docker image to Docker Hub
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - '*'
 
 jobs:
   build_image:
