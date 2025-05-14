@@ -3,13 +3,7 @@ version: "3"
 vars:
   PYTHON_BASE_IMAGE_TAG:
     sh: |
-      export `cat .build.env` && \
-      ref_name=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/HEAD detached at //' -e 's/* (\(.*\))/\1/' -e 's/* \(.*\)/\1/');
-      if [[ "$ref_name" == 3* ]]; then
-        echo "$ref_name";
-      else
-        echo "$PYTHON_BASE_IMAGE_TAG_DEFAULT";
-      fi
+       echo $(./scripts/bash_helpers.sh get_image_tag)
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY
@@ -27,7 +21,7 @@ tasks:
         docker build {{.DOCKER_BUILD_ARGS}} \
         --build-arg PYTHON_BASE_IMAGE_TAG={{.PYTHON_BASE_IMAGE_TAG}} \
         --progress plain \
-        -t python-base:{{.PYTHON_BASE_IMAGE_TAG}} .
+        -t local/python-base:{{.PYTHON_BASE_IMAGE_TAG}} .
 
   rebuild-image:
     desc: ReBuild docker image
@@ -43,7 +37,7 @@ tasks:
         export PYTHON_VERSION=$(echo {{.PYTHON_BASE_IMAGE_TAG}}| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
         docker run --rm -it {{.DOCKER_RUN_ARGS}} \
         --env-file=.build.env -e PYTHON_VERSION \
-        python-base:{{.PYTHON_BASE_IMAGE_TAG}} bash \
+        local/python-base:{{.PYTHON_BASE_IMAGE_TAG}} bash \
         -c "cd build && ./scripts/check_python_version.sh"
 
   build-and-test:

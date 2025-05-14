@@ -20,13 +20,7 @@ jobs:
 
       - name: Set dynamic variable
         run: |
-          export `cat .build.env` && \
-          ref_name=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/HEAD detached at //' -e 's/* (\(.*\))/\1/' -e 's/* \(.*\)/\1/');
-          if [[ "$ref_name" == 3* ]]; then
-            PYTHON_BASE_IMAGE_TAG=$ref_name;
-          else
-            PYTHON_BASE_IMAGE_TAG=$PYTHON_BASE_IMAGE_TAG_DEFAULT;
-          fi
+          PYTHON_BASE_IMAGE_TAG=$(./scripts/bash_helpers.sh get_image_tag);
           echo "PYTHON_BASE_IMAGE_TAG=$PYTHON_BASE_IMAGE_TAG" >> $GITHUB_ENV
           PYTHON_VERSION=$(echo $PYTHON_BASE_IMAGE_TAG | cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
