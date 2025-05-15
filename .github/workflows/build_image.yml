@@ -81,6 +81,22 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Fetch multi-platform version SHAs
+        id: multi-arch-digests
+        run: |
+          manifests_shas=$(docker manifest inspect ghcr.io/${{ github.repository_owner }}/python-base:${{ steps.process_tags.outputs.IMAGE_TAG }} | jq -r '.manifests[] | .digest' | paste -s -d ' ' -)
+          echo "multi-arch-digests=$manifests_shas" >> $GITHUB_OUTPUT
+
+      - name: Delete old images
+        uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "python-base"
+          image-tags: "${{ steps.process_tags.outputs.IMAGE_TAG }}"
+          skip-shas: ${{ steps.multi-arch-digests.outputs.multi-arch-digests }}
+          cut-off: 30s
+
       - name: Build and Push Docker image to Docker Hub
         uses: docker/build-push-action@v4
         with:
@@ -90,3 +106,4 @@ jobs:
           build-args: |
             FROM_IMAGE_TAG=${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
           tags: ${{ steps.meta.outputs.tags }}
+
