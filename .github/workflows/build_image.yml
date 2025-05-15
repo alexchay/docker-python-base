@@ -7,8 +7,11 @@ on:
       - '*'
   workflow_dispatch:
     inputs:
+      from_image_tag:
+        description: "Base image tag to use for the build (e.g., 3.12.2-slim)"
+        required: false
       image_tag:
-        description: "Image tag to use for the build"
+        description: "Image tag to use for the build (e.g., 3.12)"
         required: false
 
 
@@ -26,7 +29,8 @@ jobs:
         id: process_tags
         run: |
 
-          FROM_IMAGE_TAG=$(./scripts/bash_helpers.sh get_image_tag);
+          # Check if the base image tag is provided from workflow_dispatch user's input
+          FROM_IMAGE_TAG=$(if [ -n "${{ inputs.from_image_tag }}" ]; then echo ${{ inputs.from_image_tag }}; else echo $(./scripts/bash_helpers.sh get_image_tag); fi)
           echo "FROM_IMAGE_TAG=$FROM_IMAGE_TAG" >> $GITHUB_OUTPUT
 
           # Check if the image tag is provided from workflow_dispatch user's input
@@ -52,7 +56,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/python-base
           tags: |
             type=raw,value=${{ steps.process_tags.outputs.IMAGE_TAG }}
-            type=ref,event=tag
 
       - name: Build
         uses: docker/build-push-action@v4
