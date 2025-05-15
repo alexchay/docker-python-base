@@ -23,22 +23,24 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Process image tags
+        id: process_tags
         run: |
 
           FROM_IMAGE_TAG=$(./scripts/bash_helpers.sh get_image_tag);
           echo "FROM_IMAGE_TAG=$FROM_IMAGE_TAG" >> $GITHUB_ENV
+          echo "::set-output name=from_image_tag::$FROM_IMAGE_TAG"
 
           # Check if the image tag is provided from workflow_dispatch user's input
-          if [ -n "${{ inputs.image_tag }}" ]; then
-            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
-          else
-            echo "IMAGE_TAG=$FROM_IMAGE_TAG" >> $GITHUB_ENV
-          fi
+          IMAGE_TAG=$(if [ -n "${{ inputs.image_tag }}" ]; then echo ${{ inputs.image_tag }}; else echo $FROM_IMAGE_TAG; fi)
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "::set-output name=image_tag::$IMAGE_TAG"
 
           # Extract the Python version from the image tag
           # Example: 3.12.2-slim -> 3.12
           PYTHON_VERSION=$(echo $FROM_IMAGE_TAG | cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=python_version::$PYTHON_VERSION"
+
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,7 +55,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/python-base
           tags: |
-            type=raw,value=${{ env.IMAGE_TAG }}
+            type=raw,value=${{ steps.process_tags.outputs.image_tag }}
             type=ref,event=tag
 
       - name: Build
@@ -62,7 +64,7 @@ jobs:
           context: .
           load: true
           build-args: |
-            FROM_IMAGE_TAG=${{ env.FROM_IMAGE_TAG }}
+            FROM_IMAGE_TAG=${{ steps.process_tags.outputs.from_image_tag }}
           tags: local/image
 
       - name: Test
@@ -87,5 +89,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            FROM_IMAGE_TAG=${{ env.FROM_IMAGE_TAG }}
+            FROM_IMAGE_TAG=${{ steps.process_tags.outputs.from_image_tag }}
           tags: ${{ steps.meta.outputs.tags }}
