@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEFAULT_PYTHON_BASE_IMAGE_TAG=3.9-slim
+DEFAULT_IMAGE_TAG=3.9-slim
 
 # Extract ref name from git current branch/tag
 function extract_ref_name {
@@ -25,7 +25,7 @@ function get_image_tag {
     if [[ "$ref_name" == 3* ]]; then
         echo "$ref_name";
     else
-        echo "$DEFAULT_PYTHON_BASE_IMAGE_TAG";
+        echo "$DEFAULT_IMAGE_TAG";
     fi
 }
 

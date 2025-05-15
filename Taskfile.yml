@@ -1,9 +1,10 @@
 # https://taskfile.dev
 version: "3"
 vars:
-  PYTHON_BASE_IMAGE_TAG:
+  FROM_IMAGE_TAG:
     sh: |
        echo $(./scripts/bash_helpers.sh get_image_tag)
+  IMAGE_TAG: '{{.FROM_IMAGE_TAG}}'
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY
@@ -16,12 +17,12 @@ tasks:
     desc: Build docker image
     cmds:
       - |
-        echo "Build from base image with tag={{.PYTHON_BASE_IMAGE_TAG}}"
+        echo "Build from base image with tag={{.IMAGE_TAG}}"
         export `cat .build.env` && \
         docker build {{.DOCKER_BUILD_ARGS}} \
-        --build-arg PYTHON_BASE_IMAGE_TAG={{.PYTHON_BASE_IMAGE_TAG}} \
+        --build-arg FROM_IMAGE_TAG={{.FROM_IMAGE_TAG}} \
         --progress plain \
-        -t local/python-base:{{.PYTHON_BASE_IMAGE_TAG}} .
+        -t local/python-base:{{.IMAGE_TAG}} .
 
   rebuild-image:
     desc: ReBuild docker image
@@ -34,10 +35,10 @@ tasks:
     desc: Test docker image
     cmds:
       - |
-        export PYTHON_VERSION=$(echo {{.PYTHON_BASE_IMAGE_TAG}}| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
+        export PYTHON_VERSION=$(echo {{.IMAGE_TAG}}| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
         docker run --rm -it {{.DOCKER_RUN_ARGS}} \
         --env-file=.build.env -e PYTHON_VERSION \
-        local/python-base:{{.PYTHON_BASE_IMAGE_TAG}} bash \
+        local/python-base:{{.IMAGE_TAG}} bash \
         -c "cd build && ./scripts/check_python_version.sh"
 
   build-and-test:
