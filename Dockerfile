@@ -1,5 +1,5 @@
 ARG FROM_IMAGE_TAG="defval"
-FROM docker.io/library/python:$FROM_IMAGE_TAG
+FROM docker.io/library/python:${FROM_IMAGE_TAG}
 
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
 
