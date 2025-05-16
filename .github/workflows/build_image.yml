@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
+      from_image_name: ${{ steps.process_tags.outputs.FROM_IMAGE_NAME }}
       from_image_tag: ${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
       image_name: ${{ steps.process_tags.outputs.IMAGE_NAME }}
       image_tag: ${{ steps.process_tags.outputs.IMAGE_TAG }}
@@ -38,9 +39,11 @@ jobs:
           IMAGE_TAG=$(if [ -n "${{ inputs.image_tag }}" ]; then echo ${{ inputs.image_tag }}; else echo $FROM_IMAGE_TAG; fi)
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-          # Get the image name from build.env file (example: IMAGE_NAME=python-base)
           # This file should contain the environment variables used in the Dockerfile and the build process.
-          export `cat .build.env` && echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          export `cat .github/.build.env` && \
+          echo "FROM_IMAGE_NAME=$FROM_IMAGE_NAME" >> $GITHUB_OUTPUT && \
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
 
   build_image:
     permissions:
@@ -49,6 +52,7 @@ jobs:
     needs: process_image_tags
     uses: alexchay/github-ci/.github/workflows/build_image.yml@main
     with:
+      from_image_name: ${{ needs.process_image_tags.outputs.from_image_name }}
       from_image_tag: ${{ needs.process_image_tags.outputs.from_image_tag }}
       image_name: ${{ needs.process_image_tags.outputs.image_name }}
       image_tag: ${{ needs.process_image_tags.outputs.image_tag }}
