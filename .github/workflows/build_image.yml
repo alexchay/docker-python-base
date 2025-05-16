@@ -41,11 +41,6 @@ jobs:
           # This file should contain the environment variables used in the Dockerfile and the build process.
           export `cat .build.env` && echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
-          # Extract the Python version from the image tag
-          # Example: 3.12.2-slim -> 3.12
-          PYTHON_VERSION=$(echo $FROM_IMAGE_TAG | cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
-          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -57,7 +52,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/python-base
+            ghcr.io/${{ github.repository_owner }}/${{ steps.process_tags.outputs.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ steps.process_tags.outputs.IMAGE_TAG }}
 
@@ -74,9 +69,9 @@ jobs:
         run: |
           docker run --rm \
             -v $(pwd)/:/home/user/build/ \
-            --env-file=.build.env -e PYTHON_VERSION \
+            -e IMAGE_TAG=${{ steps.process_tags.outputs.IMAGE_TAG }} \
             local/image bash \
-            -c "cd build && ./scripts/check_python_version.sh"
+            -c "cd build && ./scripts/test.sh"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -88,14 +83,15 @@ jobs:
       - name: Fetch multi-platform version SHAs
         id: multi-arch-digests
         run: |
-          manifests_shas=$(docker manifest inspect ghcr.io/${{ github.repository_owner }}/python-base:${{ steps.process_tags.outputs.IMAGE_TAG }} | jq -r '.manifests[] | .digest' | paste -s -d ', ' -)
+          manifests_shas=$(docker manifest inspect ghcr.io/${{ github.repository_owner }}/${{ steps.process_tags.outputs.IMAGE_NAME }}:${{ steps.process_tags.outputs.IMAGE_TAG }} \
+                              | jq -r '.manifests[] | .digest' | paste -s -d ', ' -)
           echo $manifests_shas
           echo "multi-arch-digests=$manifests_shas" >> $GITHUB_OUTPUT
 
       - name: Delete old images
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
-          package: "python-base"
+          package: "${{ steps.process_tags.outputs.IMAGE_NAME }}"
           delete-tags: "${{ steps.process_tags.outputs.IMAGE_TAG }}"
 
       - name: Build and Push Docker image to Docker Hub
