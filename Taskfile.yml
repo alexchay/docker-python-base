@@ -37,9 +37,8 @@ tasks:
     desc: Test docker image
     cmds:
       - |
-        export PYTHON_VERSION=$(echo {{.IMAGE_TAG}}| cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
         docker run --rm -it {{.DOCKER_RUN_ARGS}} \
-        --env-file=.build.env -e PYTHON_VERSION \
+        -e IMAGE_TAG={{.IMAGE_TAG}} \
         local/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} bash \
         -c "cd build && ./scripts/test.sh"
 

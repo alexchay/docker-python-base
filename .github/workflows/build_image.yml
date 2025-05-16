@@ -37,6 +37,10 @@ jobs:
           IMAGE_TAG=$(if [ -n "${{ inputs.image_tag }}" ]; then echo ${{ inputs.image_tag }}; else echo $FROM_IMAGE_TAG; fi)
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+          # Get the image name from build.env file (example: IMAGE_NAME=python-base)
+          # This file should contain the environment variables used in the Dockerfile and the build process.
+          export `cat .build.env` && echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
           # Extract the Python version from the image tag
           # Example: 3.12.2-slim -> 3.12
           PYTHON_VERSION=$(echo $FROM_IMAGE_TAG | cut -d'-' -f1 | awk 'NR==1{split($1, a, "."); print a[1]"."a[2]}')
