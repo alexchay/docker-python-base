@@ -1,12 +1,11 @@
 # https://taskfile.dev
 version: "3"
 vars:
+  FROM_IMAGE_NAME: docker.io/library/python
   FROM_IMAGE_TAG:
     sh: |
        echo $(./scripts/bash_helpers.sh get_image_tag)
-  IMAGE_NAME:
-    sh: |
-      export `cat .build.env` && echo $IMAGE_NAME
+  IMAGE_NAME: python-base
   IMAGE_TAG: '{{.FROM_IMAGE_TAG}}'
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
@@ -22,6 +21,7 @@ tasks:
       - |
         echo "Build from base image with tag={{.IMAGE_TAG}}"
         docker build {{.DOCKER_BUILD_ARGS}} \
+        --build-arg FROM_IMAGE_NAME={{.FROM_IMAGE_NAME}} \
         --build-arg FROM_IMAGE_TAG={{.FROM_IMAGE_TAG}} \
         --progress plain \
         -t local/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} .
