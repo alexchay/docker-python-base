@@ -16,12 +16,13 @@ on:
 
 
 jobs:
-  build_image:
+  process_image_tags:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
+    outputs:
+      from_image_tag: ${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
+      image_name: ${{ steps.process_tags.outputs.IMAGE_NAME }}
+      image_tag: ${{ steps.process_tags.outputs.IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,66 +42,13 @@ jobs:
           # This file should contain the environment variables used in the Dockerfile and the build process.
           export `cat .build.env` && echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ steps.process_tags.outputs.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ steps.process_tags.outputs.IMAGE_TAG }}
-
-      - name: Build
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          load: true
-          build-args: |
-            FROM_IMAGE_TAG=${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
-          tags: local/image
-
-      - name: Test
-        run: |
-          docker run --rm \
-            -v $(pwd)/:/home/user/build/ \
-            -e IMAGE_TAG=${{ steps.process_tags.outputs.IMAGE_TAG }} \
-            local/image bash \
-            -c "cd build && ./scripts/test.sh"
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Fetch multi-platform version SHAs
-        id: multi-arch-digests
-        run: |
-          manifests_shas=$(docker manifest inspect ghcr.io/${{ github.repository_owner }}/${{ steps.process_tags.outputs.IMAGE_NAME }}:${{ steps.process_tags.outputs.IMAGE_TAG }} \
-                              | jq -r '.manifests[] | .digest' | paste -s -d ', ' -)
-          echo $manifests_shas
-          echo "multi-arch-digests=$manifests_shas" >> $GITHUB_OUTPUT
-
-      - name: Delete old images
-        uses: dataaxiom/ghcr-cleanup-action@v1
-        with:
-          package: "${{ steps.process_tags.outputs.IMAGE_NAME }}"
-          delete-tags: "${{ steps.process_tags.outputs.IMAGE_TAG }}"
-
-      - name: Build and Push Docker image to Docker Hub
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          build-args: |
-            FROM_IMAGE_TAG=${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
-          tags: ${{ steps.meta.outputs.tags }}
-
+  build_image:
+    permissions:
+      contents: read
+      packages: write
+    needs: process_image_tags
+    uses: alexchay/github-ci/.github/workflows/build_image.yml@main
+    with:
+      from_image_tag: ${{ needs.process_image_tags.outputs.from_image_tag }}
+      image_name: ${{ needs.process_image_tags.outputs.image_name }}
+      image_tag: ${{ needs.process_image_tags.outputs.image_tag }}
