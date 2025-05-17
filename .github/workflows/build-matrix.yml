@@ -30,6 +30,10 @@ jobs:
     needs: prepare-matrix
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+      fail-fast: false
+      # set limit to 2 parallel jobs due to concurency allows only 1 running job and 1 pending job
+      # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#concurrency
+      max-parallel: 2
     permissions:
       contents: read
       packages: write
