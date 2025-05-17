@@ -1,4 +1,4 @@
-name: Validate Dockerfile
+name: Dockerfile
 
 on:
   workflow_dispatch:
@@ -10,6 +10,6 @@ on:
       - Dockerfile
 
 jobs:
-  validate:
-    name: Validate Dockerfile
+  validate-dockerfile:
+    name: Dockerfile validation
     uses: alexchay/github-ci/.github/workflows/validate_dockerfile.yml@main

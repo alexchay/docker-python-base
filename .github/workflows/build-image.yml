@@ -18,20 +18,20 @@ concurrency:
   group: "${{ github.repository_id }}"
 
 jobs:
-  process_image_tags:
-    name: Process image tags
+  setup_build_env:
+    name: Setup build environment
     runs-on: ubuntu-latest
 
     outputs:
-      from_image_name: ${{ steps.process_tags.outputs.FROM_IMAGE_NAME }}
-      from_image_tag: ${{ steps.process_tags.outputs.FROM_IMAGE_TAG }}
-      image_name: ${{ steps.process_tags.outputs.IMAGE_NAME }}
-      image_tag: ${{ steps.process_tags.outputs.IMAGE_TAG }}
+      from_image_name: ${{ steps.setup.outputs.FROM_IMAGE_NAME }}
+      from_image_tag: ${{ steps.setup.outputs.FROM_IMAGE_TAG }}
+      image_name: ${{ steps.setup.outputs.IMAGE_NAME }}
+      image_tag: ${{ steps.setup.outputs.IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Process image tags
-        id: process_tags
+      - name: Setup build environment
+        id: setup
         run: |
 
           # Check if the base image tag is provided from workflow_dispatch user's input
@@ -42,21 +42,21 @@ jobs:
           IMAGE_TAG=$(if [ -n "${{ inputs.image_tag }}" ]; then echo ${{ inputs.image_tag }}; else echo $FROM_IMAGE_TAG; fi)
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-          # This file should contain the environment variables used in the Dockerfile and the build process.
-          export `cat .github/.build.env` && \
-          echo "FROM_IMAGE_NAME=$FROM_IMAGE_NAME" >> $GITHUB_OUTPUT && \
+          # This file 'build.env' should contain the environment variables used in the Dockerfile and the build process.
+          set -a; source .github/.build.env; set +a;
+          echo "FROM_IMAGE_NAME=$FROM_IMAGE_NAME" >> $GITHUB_OUTPUT
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
 
   build:
-    name: 'Build and push image ${{ needs.process_image_tags.outputs.image_name }}:${{ needs.process_image_tags.outputs.image_tag }}'
+    name: 'Build ${{ needs.setup_build_env.outputs.image_name }}:${{ needs.setup_build_env.outputs.image_tag }}'
     permissions:
       contents: read
       packages: write
-    needs: process_image_tags
+    needs: setup_build_env
     uses: alexchay/github-ci/.github/workflows/build_and_push_image_to_ghcr.yml@main
     with:
-      from_image_name: ${{ needs.process_image_tags.outputs.from_image_name }}
-      from_image_tag: ${{ needs.process_image_tags.outputs.from_image_tag }}
-      image_name: ${{ needs.process_image_tags.outputs.image_name }}
-      image_tag: ${{ needs.process_image_tags.outputs.image_tag }}
+      from_image_name: ${{ needs.setup_build_env.outputs.from_image_name }}
+      from_image_tag: ${{ needs.setup_build_env.outputs.from_image_tag }}
+      image_name: ${{ needs.setup_build_env.outputs.image_name }}
+      image_tag: ${{ needs.setup_build_env.outputs.image_tag }}
