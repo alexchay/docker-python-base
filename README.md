@@ -1,35 +1,44 @@
-# Python Base Docker Image
 
-This repository contains a base Docker image for Python development. It is designed to provide a consistent and reproducible environment for Python applications.
+#
 
-[![validate](https://github.com/alexchay/docker-python-base/actions/workflows/validate.yml/badge.svg)](https://github.com/alexchay/docker-python-base/actions/workflows/validate.yml)
+## Python Base Docker Image
 
-## Features
+This repository contains the source for building container image for development and testing of Python applications.
 
-- Based on the official Python Docker image
-- Includes common Python development tools and libraries
-- Configured for easy extension and customization
+[![Dockerfile](https://github.com/alexchay/docker-python-base/actions/workflows/dockerfile-check.yml/badge.svg)](https://github.com/alexchay/docker-python-base/actions/workflows/dockerfile-check.yml) [![Shell scripts](https://github.com/alexchay/docker-python-base/actions/workflows/shellscripts-check.yml/badge.svg)](https://github.com/alexchay/docker-python-base/actions/workflows/shellscripts-check.yml) [![Matrix Build](https://github.com/alexchay/docker-python-base/actions/workflows/build-matrix.yml/badge.svg)](https://github.com/alexchay/docker-python-base/actions/workflows/build-matrix.yml)
+
+#### Features
+
+- Based on the Docker [official](https://hub.docker.com/_/python) image
 - Install custom root CA certificates
 - Create local group and user for running applications
+- Configured for easy extension and customization
 
-## Getting Started
-
-### Prerequisites
+#### Prerequisites
 
 - Docker installed on your machine
-- Taskfile CLI installed on your machine
+- [Taskfile CLI](https://taskfile.dev) installed on your machine
 
-### Building the Image
+### Build
 
-To build the Docker image, run the following command:
+Automated builds are setup for the repository and the matrix of base images and python versions are listed in the `matrix.yml` file.
+The image is tagged with the python backend/version and a matching `python` version, e.g.:
+
+- ghcr.io/alexchay/python-base:3.11-slim
+- ghcr.io/alexchay/python-base:3.10.17
+
+Images are built for `linux/amd64` and `linux/arm64` architectures.
+
+You can build the images locally using the `task` command:
 
 ```sh
-git checkout 3.9-slim
+git checkout 3.10-slim
 task build-image
 ```
 
-### Running a Container
+### Usage
 
+Can be used as a base image for container images with the required python modules/application or as a standalone container for running python application.
 To run a container using the built image, use the following command:
 
 ```sh
