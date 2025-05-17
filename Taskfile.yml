@@ -19,7 +19,7 @@ tasks:
     desc: Build docker image
     cmds:
       - |
-        echo "Build from base image with tag={{.IMAGE_TAG}}"
+        echo "Build from base image {{.FROM_IMAGE_NAME}}:{{.FROM_IMAGE_TAG}}"
         docker build {{.DOCKER_BUILD_ARGS}} \
         --build-arg FROM_IMAGE_NAME={{.FROM_IMAGE_NAME}} \
         --build-arg FROM_IMAGE_TAG={{.FROM_IMAGE_TAG}} \
