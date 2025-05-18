@@ -59,4 +59,4 @@ jobs:
       from_image_name: ${{ needs.setup_build_env.outputs.from_image_name }}
       from_image_tag: ${{ needs.setup_build_env.outputs.from_image_tag }}
       image_name: ${{ needs.setup_build_env.outputs.image_name }}
-      image_tag: ${{ needs.setup_build_env.outputs.image_tag }}
+      image_tags: ${{ needs.setup_build_env.outputs.image_tag }}
