@@ -1,6 +1,6 @@
-ARG FROM_IMAGE_NAME="defval"
-ARG FROM_IMAGE_TAG="defval"
-FROM ${FROM_IMAGE_NAME}:${FROM_IMAGE_TAG}
+ARG BASE_IMAGE_NAME="defval"
+ARG BASE_IMAGE_TAG="defval"
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}
 
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
 
