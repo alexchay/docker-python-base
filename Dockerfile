@@ -24,7 +24,10 @@ RUN \
     && chown -R :$GROUPNAME /usr/local/share/ca-certificates/
 
 USER $USERNAME
-
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN \
+    mkdir -p $HOME/.local/bin \
+    && mkdir -p $HOME/{.config,.cache,.ssh}
 
 ENV \
     # disable warnings when not verifying SSL certificate
