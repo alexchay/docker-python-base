@@ -7,11 +7,10 @@ cache/img
 **/.git
 **/.gitignore
 **/.vscode
-**/coverage
+**/.coverage
+**/.venv
 **/.env
 **/.dev.env_*
-**/venv
-**/env
 **/.aws
 **/.ssh
 **/.DS_Store
@@ -22,6 +21,3 @@ README.md
 Taskfile.yml
 .hadolint.yaml
 .shellcheckrc
-.bumpversion.cfg
-bump_calver_build.sh
-commitlint.config.js
