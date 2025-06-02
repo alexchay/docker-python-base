@@ -4,6 +4,7 @@ dotenv: ['.env']
 env:
   # PYTHON_VERSION: "3.10"
 vars:
+  DOCKER_BUILDKIT: 1
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
     --build-arg CI_REGISTRY
@@ -24,11 +25,12 @@ tasks:
       - |
         set -a; source .env; set +a;
         echo "Build from base image ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
-        docker build {{.DOCKER_BUILD_ARGS}} \
+        export DOCKER_BUILDKIT={{.DOCKER_BUILDKIT}}
+        docker buildx build {{.DOCKER_BUILD_ARGS}} \
         --build-arg BASE_IMAGE_NAME \
         --build-arg BASE_IMAGE_TAG \
         --progress plain \
-        -t local/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} .
+        -t local/${IMAGE_NAME}:${IMAGE_TAG} .
 
   rebuild-image:
     desc: ReBuild docker image
@@ -46,6 +48,14 @@ tasks:
         -e IMAGE_TAGS=$IMAGE_TAG \
         local/${IMAGE_NAME}:${IMAGE_TAG} bash \
         -c "cd /build && ./scripts/test.sh"
+
+  remove-image:
+    desc: Test docker image
+    cmds:
+      - |
+        set -a; source .env; set +a;
+        docker image rm \
+        local/${IMAGE_NAME}:${IMAGE_TAG}
 
   build-and-test:
     desc: Build and test docker image
