@@ -4,7 +4,8 @@ include:
     file: '/ext/.build_docker_image.yml'
 
 variables:
-  PYTHON_VERSION: "3.9"
+  DOCKER_BUILD_ARGS: >-
+    --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
 
 .rules:
   build_image_rules:
@@ -28,16 +29,6 @@ build_image:
   extends:
     - .build_image
   stage: build
-  script:
-    - >-
-      docker build
-      --build-arg HTTP_PROXY
-      --build-arg HTTPS_PROXY
-      --build-arg NO_PROXY
-      --build-arg CI_REGISTRY=$CI_REGISTRY/$CI_REGISTRY_PATH
-      --cache-from $BRANCH_IMAGE
-      --progress plain -t $BUILD_IMAGE .
-    - docker push $BUILD_IMAGE
   rules: !reference [.rules, build_image_rules]
 
 
