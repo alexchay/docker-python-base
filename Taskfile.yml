@@ -7,7 +7,7 @@ vars:
   DOCKER_BUILDKIT: 1
   DOCKER_BUILD_ARGS: >-
     --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY
-    --build-arg CI_REGISTRY
+    --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
   DOCKER_RUN_ARGS: >-
     -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY
     -v $(pwd)/:/build/
@@ -27,8 +27,6 @@ tasks:
         echo "Build from base image ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
         export DOCKER_BUILDKIT={{.DOCKER_BUILDKIT}}
         docker buildx build {{.DOCKER_BUILD_ARGS}} \
-        --build-arg BASE_IMAGE_NAME \
-        --build-arg BASE_IMAGE_TAG \
         --progress plain \
         -t local/${IMAGE_NAME}:${IMAGE_TAG} .
 
