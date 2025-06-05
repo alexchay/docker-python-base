@@ -12,18 +12,18 @@ variables:
   build_image_rules:
     - if: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
-    - if: $CI_OPTIMIZE_PIPELINE == "true"
-      changes:
-        - Dockerfile
-    - if: $CI_OPTIMIZE_PIPELINE == "false"
-  release_branch_rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
-    - if: $CI_OPTIMIZE_PIPELINE == "true"
-      changes:
-        - Dockerfile
-    - if: $CI_OPTIMIZE_PIPELINE == "false"
+
+
+validate_dockerfile:
+  extends:
+    - .validate_dockerfile
+  stage: validate
+
+
+validate_shell:
+  extends:
+    - .validate_shell
+  stage: validate
 
 
 build_image:
@@ -33,4 +33,50 @@ build_image:
   rules: !reference [.rules, build_image_rules]
 
 
+test_image:
+  extends:
+    - .test_image
+  stage: test
+  script:
+    - pwd
+    - python --version
+    - ./scripts/test.sh
+    - echo $PATH
+    - |
+      # check that /home/$USERNAME/.local/bin is in PATH
+      if [[ ! "$PATH" =~ "/home/$USERNAME/.local/bin" ]]; then
+          echo "/home/$USERNAME/.local/bin is not in PATH"
+          exit 1
+      fi
+  variables:
+    IMAGE_TAGS: $BUILD_IMAGE_TAG
+  rules: !reference [.rules, build_image_rules]
 
+
+release_image:
+  # Official docker image.
+  image: docker:$DOCKER_IMAGE_TAG
+  extends:
+    - .release
+  stage: release
+  before_script:
+    - apk add --no-cache crane || true
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  rules: !reference [.rules, build_image_rules]
+
+
+cleanup_build:
+  # Official docker image.
+  image: docker:$DOCKER_IMAGE_TAG
+  stage: cleanup
+  when: always
+  tags:
+    - docker-ansible
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - apk add --no-cache curl jq || true
+  script:
+    - !reference [.cleanup_build, script]
+  resource_group: $CI_COMMIT_SHORT_SHA
+  rules: !reference [.rules, build_image_rules]
