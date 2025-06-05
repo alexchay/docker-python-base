@@ -1,0 +1,67 @@
+include:
+  - project: '$GITLAB_CI_PATH'
+    ref: '$GITLAB_CI_REF_NAME'
+    file: '/ext/.build_docker_image.yml'
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+
+variables:
+  DOCKER_BUILD_ARGS: >-
+    --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
+  CACHE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:buildcache_$BUILD_IMAGE_TAG
+
+build_image:
+  stage: build
+  extends:
+    - .build_image
+
+test_image:
+  stage: test
+  extends:
+    - .test_image
+  script:
+    - pwd
+    - python --version
+    - ./scripts/test.sh
+    - echo $PATH
+    - |
+      # check that /home/$USERNAME/.local/bin is in PATH
+      if [[ ! "$PATH" =~ "/home/$USERNAME/.local/bin" ]]; then
+          echo "/home/$USERNAME/.local/bin is not in PATH"
+          exit 1
+      fi
+  variables:
+    IMAGE_TAGS: $BUILD_IMAGE_TAG
+
+release_image:
+  stage: release
+  # Official docker image.
+  image: docker:$DOCKER_IMAGE_TAG
+  extends:
+    - .release
+  before_script:
+    - apk add --no-cache crane || true
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - if [ "$CI_REGISTRY_TLS_VERIFY" = "0" ]; then export REGISTRY_INSECURE=" --insecure";
+      fi
+    - crane $REGISTRY_INSECURE manifest $BUILD_IMAGE
+    - crane $REGISTRY_INSECURE tag $BUILD_IMAGE $BUILD_IMAGE_TAG
+
+cleanup_build:
+  stage: cleanup
+  when: always
+  # Official docker image.
+  image: docker:$DOCKER_IMAGE_TAG
+  tags:
+    - docker-ansible
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - apk add --no-cache curl jq || true
+  script:
+    - !reference [.cleanup_build, script]
+  resource_group: $CI_COMMIT_SHORT_SHA
+
