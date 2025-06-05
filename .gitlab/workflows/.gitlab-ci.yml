@@ -1,5 +1,6 @@
 include:
   - local: "/.gitlab/.build.env.yml"
+  - local: "/.gitlab/matrix.yml"
   - project: '$GITLAB_CI_PATH'
     ref: '$GITLAB_CI_REF_NAME'
     file: '/ext/.build_docker_image.yml'
@@ -8,6 +9,8 @@ include:
   build_image:
     - if: $CI_COMMIT_TAG
     - if: $CI_MATRIX_BUILD==null && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
+  build_matrix:
+    - if: $CI_MATRIX_BUILD!=null && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
 
 variables:
   DOCKER_BUILD_ARGS: >-
@@ -38,4 +41,21 @@ trigger_build_image:
       - local: '/.gitlab/workflows/build-image.yml'
     strategy: depend
 
+
+###### BUILD MATRIX ######
+trigger_build_matrix:
+  stage: build
+  rules: !reference [.rules, build_matrix]
+  # needs:
+  #   - validate_dockerfile
+  #   - validate_shell
+  extends:
+    - .parallel_matrix
+  variables:
+    PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+  trigger:
+    include:
+      - local: '/.gitlab/workflows/build-image.yml'
+    strategy: depend
+  resource_group: $CI_COMMIT_SHORT_SHA
 

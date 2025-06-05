@@ -74,5 +74,4 @@ cleanup_build:
     - apk add --no-cache curl jq || true
   script:
     - !reference [.cleanup_build, script]
-  resource_group: $CI_COMMIT_SHORT_SHA
 
