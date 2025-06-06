@@ -11,7 +11,7 @@ on:
         description: "Base image tag to use for the build (e.g., 3.12.2-slim)"
         required: false
         type: string
-      image_tags:
+      build_image_tags:
         description: "Comma-separated list of tags to apply to the image (e.g., 3.12.2-slim, latest)"
         required: false
         type: string
@@ -27,8 +27,8 @@ jobs:
     outputs:
       base_image_name: ${{ steps.setup.outputs.BASE_IMAGE_NAME }}
       base_image_tag: ${{ steps.setup.outputs.BASE_IMAGE_TAG }}
-      image_name: ${{ steps.setup.outputs.IMAGE_NAME }}
-      image_tags: ${{ steps.setup.outputs.IMAGE_TAGS }}
+      build_image_name: ${{ steps.setup.outputs.BUILD_IMAGE_NAME }}
+      build_image_tags: ${{ steps.setup.outputs.BUILD_IMAGE_TAGS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,17 +41,17 @@ jobs:
           echo "BASE_IMAGE_TAG=$BASE_IMAGE_TAG" >> $GITHUB_OUTPUT
 
           # Check if the image tag is provided from workflow_dispatch user's input
-          IMAGE_TAGS=$(if [ -n "${{ inputs.image_tags }}" ]; then echo ${{ inputs.image_tags }}; else echo $BASE_IMAGE_TAG; fi)
-          echo "IMAGE_TAGS=$IMAGE_TAGS" >> $GITHUB_OUTPUT
+          BUILD_IMAGE_TAGS=$(if [ -n "${{ inputs.build_image_tags }}" ]; then echo ${{ inputs.build_image_tags }}; else echo $BASE_IMAGE_TAG; fi)
+          echo "BUILD_IMAGE_TAGS=$BUILD_IMAGE_TAGS" >> $GITHUB_OUTPUT
 
           # This file 'build.env' should contain the environment variables used in the Dockerfile and the build process.
           set -a; source .github/.build.env; set +a;
           echo "BASE_IMAGE_NAME=$BASE_IMAGE_NAME" >> $GITHUB_OUTPUT
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "BUILD_IMAGE_NAME=$BUILD_IMAGE_NAME" >> $GITHUB_OUTPUT
 
 
   build:
-    name: 'Build ${{ needs.setup_build_env.outputs.image_name }}:${{ needs.setup_build_env.outputs.image_tags }}'
+    name: 'Build ${{ needs.setup_build_env.outputs.build_image_name }}:${{ needs.setup_build_env.outputs.build_image_tags }}'
     permissions:
       contents: read
       packages: write
@@ -60,5 +60,5 @@ jobs:
     with:
       base_image_name: ${{ needs.setup_build_env.outputs.base_image_name }}
       base_image_tag: ${{ needs.setup_build_env.outputs.base_image_tag }}
-      image_name: ${{ needs.setup_build_env.outputs.image_name }}
-      image_tags: ${{ needs.setup_build_env.outputs.image_tags }}
+      build_image_name: ${{ needs.setup_build_env.outputs.build_image_name }}
+      build_image_tags: ${{ needs.setup_build_env.outputs.build_image_tags }}

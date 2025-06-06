@@ -26,7 +26,7 @@ jobs:
           echo "matrix_json=$(jq -c . < ${{ steps.convert_matrix.outputs.result-path }}/matrix.json)" >> $GITHUB_OUTPUT
 
   build:
-    name: 'Build ${{ matrix.image_name }}:${{ matrix.image_tags }}'
+    name: 'Build ${{ matrix.BUILD_IMAGE_NAME }}:${{ matrix.BUILD_IMAGE_TAGS }}'
     needs: prepare-matrix
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
@@ -39,7 +39,7 @@ jobs:
       packages: write
     uses: alexchay/github-ci/.github/workflows/build_and_push_image_to_ghcr.yml@main
     with:
-      base_image_name: ${{ matrix.base_image_name }}
-      base_image_tag: ${{ matrix.base_image_tag }}
-      image_name: ${{ matrix.image_name }}
-      image_tags: ${{ matrix.image_tags }}
+      base_image_name: ${{ matrix.BASE_IMAGE_NAME}}
+      base_image_tag: ${{ matrix.BASE_IMAGE_TAG }}
+      build_image_name: ${{ matrix.BUILD_IMAGE_NAME }}
+      build_image_tags: ${{ matrix.BUILD_IMAGE_TAGS }}
