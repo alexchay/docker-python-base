@@ -13,10 +13,12 @@ variables:
   CACHE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:buildcache_$BUILD_IMAGE_TAG
   RELEASE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:$BUILD_IMAGE_TAG
 
+
 build_image:
   stage: build
   extends:
     - .build_image
+
 
 test_image:
   stage: test
@@ -24,17 +26,10 @@ test_image:
     - .test_image
   script:
     - pwd
-    - python --version
     - ./scripts/test.sh
-    - echo $PATH
-    - |
-      # check that /home/$USERNAME/.local/bin is in PATH
-      if [[ ! "$PATH" =~ "/home/$USERNAME/.local/bin" ]]; then
-          echo "/home/$USERNAME/.local/bin is not in PATH"
-          exit 1
-      fi
   variables:
     IMAGE_TAGS: $BUILD_IMAGE_TAG
+
 
 release_image:
   stage: release
@@ -66,8 +61,6 @@ cleanup_build:
   when: always
   # Official docker image.
   image: docker:$DOCKER_IMAGE_TAG
-  tags:
-    - docker-ansible
   variables:
     GIT_STRATEGY: none
   before_script:

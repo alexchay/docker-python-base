@@ -7,3 +7,7 @@ scripts_dir=$(dirname "$0")
 # shellcheck disable=SC1091
 . $scripts_dir/check_python_version.sh
 
+# Run this script to check PATH
+# shellcheck disable=SC1091
+. $scripts_dir/check_path.sh
+

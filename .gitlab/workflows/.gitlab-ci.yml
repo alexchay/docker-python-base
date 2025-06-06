@@ -19,15 +19,15 @@ variables:
   RELEASE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:$BUILD_IMAGE_TAG
 
 ###### VALIDATE ######
-# validate_dockerfile:
-#   stage: validate
-#   extends:
-#     - .validate_dockerfile
+validate_dockerfile:
+  stage: validate
+  extends:
+    - .validate_dockerfile
 
-# validate_shell:
-#   stage: validate
-#   extends:
-#     - .validate_shell
+validate_shell:
+  stage: validate
+  extends:
+    - .validate_shell
 
 
 ###### BUILD IMAGE ######
@@ -46,9 +46,9 @@ trigger_build_image:
 trigger_build_matrix:
   stage: build
   rules: !reference [.rules, build_matrix]
-  # needs:
-  #   - validate_dockerfile
-  #   - validate_shell
+  needs:
+    - validate_dockerfile
+    - validate_shell
   extends:
     - .parallel_matrix
   variables:
