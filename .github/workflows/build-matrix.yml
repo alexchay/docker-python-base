@@ -3,6 +3,8 @@ description: Build and push Docker images using a build matrix
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
 
 concurrency:
   group: "${{ github.repository_id }}"
