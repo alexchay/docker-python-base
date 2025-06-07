@@ -47,6 +47,8 @@ trigger_build_image:
   trigger:
     include:
       - local: '/.gitlab/workflows/build-image.yml'
+    forward:
+      pipeline_variables: true
     strategy: depend
   resource_group: $CI_COMMIT_SHORT_SHA
 
