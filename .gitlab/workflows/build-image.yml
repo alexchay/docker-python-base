@@ -4,6 +4,7 @@ include:
     file: '/ext/.build_docker_image.yml'
 
 workflow:
+  name: "Build $BUILD_IMAGE_NAME:$BUILD_IMAGE_TAG,$BUILD_IMAGE_TAGS"
   rules:
     - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
 
