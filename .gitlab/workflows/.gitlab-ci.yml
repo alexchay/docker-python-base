@@ -7,10 +7,10 @@ include:
 
 .rules:
   build_image:
-    - if: $CI_COMMIT_TAG
-    - if: $CI_MATRIX_BUILD==null && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
+    - if: $CI_MATRIX_BUILD!="true" && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
   build_matrix:
-    - if: $CI_MATRIX_BUILD!=null && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
+    - if: $CI_MATRIX_BUILD=="true" && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
+    - if: $CI_PIPELINE_SOURCE == "schedule"
 
 variables:
   DOCKER_BUILD_ARGS: >-
@@ -40,6 +40,7 @@ trigger_build_image:
     include:
       - local: '/.gitlab/workflows/build-image.yml'
     strategy: depend
+  resource_group: $CI_COMMIT_SHORT_SHA
 
 
 ###### BUILD MATRIX ######
