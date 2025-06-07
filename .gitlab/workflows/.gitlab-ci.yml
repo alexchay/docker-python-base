@@ -5,9 +5,17 @@ include:
     ref: '$GITLAB_CI_REF_NAME'
     file: '/ext/.build_docker_image.yml'
 
+workflow:
+  rules:
+    - !reference [.workflow_rules, workflow_dispatch]
+    - !reference [.workflow_rules, commit_branches]
+    - !reference [.workflow_rules, schedule]
+
 .rules:
   build_image:
-    - if: $CI_MATRIX_BUILD!="true" && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
+    - if: $CI_MATRIX_BUILD=="true"
+      when: never
+    - !reference [.workflow_rules, workflow_dispatch]
   build_matrix:
     - if: $CI_MATRIX_BUILD=="true" && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
     - if: $CI_PIPELINE_SOURCE == "schedule"

@@ -77,7 +77,7 @@ tasks:
           docker run --rm -it
           -v $(pwd):/app
           koalaman/shellcheck-alpine:latest
-          sh -c 'shellcheck --version && cd app && echo "Checking..." && shellcheck scripts/*.sh && echo "Done"'
+          sh -c "shellcheck --version && cd /app && echo 'Checking...' && find scripts -name '*.sh' -exec shellcheck {} + && echo 'Done'"
 
   static-analysis:
     desc: Run code formatter check, linting, static type analysis
