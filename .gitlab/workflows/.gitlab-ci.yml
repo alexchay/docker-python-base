@@ -18,13 +18,12 @@ workflow:
     - !reference [.workflow_rules, workflow_dispatch]
   build_matrix:
     - if: $CI_MATRIX_BUILD=="true" && ($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api")
-    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - !reference [.workflow_rules, schedule]
 
 variables:
   DOCKER_BUILD_ARGS: >-
     --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
   CACHE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:buildcache_$BUILD_IMAGE_TAG
-  RELEASE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:$BUILD_IMAGE_TAG
 
 ###### VALIDATE ######
 validate_dockerfile:

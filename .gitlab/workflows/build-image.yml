@@ -12,7 +12,7 @@ variables:
   DOCKER_BUILD_ARGS: >-
     --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
   CACHE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:buildcache_$BUILD_IMAGE_TAG
-  RELEASE_IMAGE: $CI_REGISTRY/$CI_REGISTRY_PATH/$BUILD_IMAGE_NAME:$BUILD_IMAGE_TAG
+
 
 
 build_image:
@@ -32,40 +32,14 @@ test_image:
     IMAGE_TAGS: $BUILD_IMAGE_TAG
 
 
-release_image:
+tag_image:
   stage: release
-  # Official docker image.
-  image: docker:$DOCKER_IMAGE_TAG
   extends:
-    - .release
-  before_script:
-    - apk add --no-cache crane || true
-    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - if [ "$CI_REGISTRY_TLS_VERIFY" = "0" ]; then export REGISTRY_INSECURE=" --insecure"; fi
-    - crane $REGISTRY_INSECURE tag $BUILD_IMAGE $BUILD_IMAGE_TAG
-    - crane $REGISTRY_INSECURE manifest $RELEASE_IMAGE
-    - |
-      if [ -n "$BUILD_IMAGE_TAGS" ]; then
-        OLD_IFS="$IFS"
-        IFS=','
-        set -- $BUILD_IMAGE_TAGS
-        IFS="$OLD_IFS"
-        for image_tag; do
-          trimmed_tag=$(echo "$image_tag" | xargs)
-          crane $REGISTRY_INSECURE tag $BUILD_IMAGE "$trimmed_tag"
-        done
-      fi
+    - .tag_image
+
 
 cleanup_build:
   stage: cleanup
-  when: always
-  # Official docker image.
-  image: docker:$DOCKER_IMAGE_TAG
-  variables:
-    GIT_STRATEGY: none
-  before_script:
-    - apk add --no-cache curl jq || true
-  script:
-    - !reference [.cleanup_build, script]
+  extends:
+    - .cleanup_build
 
