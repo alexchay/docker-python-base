@@ -10,25 +10,23 @@ vars:
     --build-arg BASE_IMAGE_NAME --build-arg BASE_IMAGE_TAG
   DOCKER_RUN_ARGS: >-
     -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY
-    -v $(pwd)/:/build/
+    -v $(pwd)/:/build/ -w /build/
 
 tasks:
   env:
     desc: Print environment variables
     cmds:
       - |
-        set -a; source .env; set +a;
         env | grep -E '(HOME|PATH|IMAGE|DOCKER|TAG|PYTHON)'
   build-image:
     desc: Build docker image
     cmds:
       - |
-        set -a; source .env; set +a;
         echo "Build from base image ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}"
         export DOCKER_BUILDKIT={{.DOCKER_BUILDKIT}}
         docker buildx build {{.DOCKER_BUILD_ARGS}} \
         --progress plain \
-        -t local/${IMAGE_NAME}:${IMAGE_TAG} .
+        -t local/${BUILD_IMAGE_NAME}:${BUILD_IMAGE_TAG} .
 
   rebuild-image:
     desc: ReBuild docker image
@@ -41,19 +39,16 @@ tasks:
     desc: Test docker image
     cmds:
       - |
-        set -a; source .env; set +a;
         docker run --rm -it {{.DOCKER_RUN_ARGS}} \
-        -e IMAGE_TAGS=$IMAGE_TAG \
-        local/${IMAGE_NAME}:${IMAGE_TAG} bash \
-        -c "cd /build && ./scripts/test.sh"
+        --entrypoint "./scripts/test-image.sh" \
+        local/${BUILD_IMAGE_NAME}:${BUILD_IMAGE_TAG}
 
   remove-image:
     desc: Test docker image
     cmds:
       - |
-        set -a; source .env; set +a;
         docker image rm \
-        local/${IMAGE_NAME}:${IMAGE_TAG}
+        local/${BUILD_IMAGE_NAME}:${BUILD_IMAGE_TAG}
 
   build-and-test:
     desc: Build and test docker image
@@ -61,23 +56,29 @@ tasks:
       - task: build-image
       - task: test-image
 
-  dockerfile-check:
-    desc: Run static analysis tool (linter) for Dockerfile
+  run-image:
+    desc: Run docker image
     cmds:
-      - >-
-          docker run --rm -it
-          -v $(pwd):/app
-          hadolint/hadolint:latest-alpine
-          sh -c 'hadolint --version && cd app && echo "Checking..." && hadolint Dockerfile && echo "Done"'
+      - task: build-image
+      - |
+        docker run --rm -it {{.DOCKER_RUN_ARGS}} \
+        local/${BUILD_IMAGE_NAME}:${BUILD_IMAGE_TAG} sh
 
   shell-check:
     desc: Run static analysis tool (linter) for shell scripts
     cmds:
       - >-
-          docker run --rm -it
-          -v $(pwd):/app
+          docker run --rm -it {{.DOCKER_RUN_ARGS}}
           koalaman/shellcheck-alpine:latest
-          sh -c "shellcheck --version && cd /app && echo 'Checking...' && find scripts -name '*.sh' -exec shellcheck {} + && echo 'Done'"
+          sh -c "shellcheck --version && echo 'Checking...' && find scripts -name '*.sh' -exec shellcheck {} + && echo 'Done'"
+
+  dockerfile-check:
+    desc: Run static analysis tool (linter) for Dockerfile
+    cmds:
+      - >-
+          docker run --rm -it {{.DOCKER_RUN_ARGS}}
+          hadolint/hadolint:latest-alpine
+          sh -c 'hadolint --version && echo "Checking..." && hadolint Dockerfile && echo "Done"'
 
   static-analysis:
     desc: Run code formatter check, linting, static type analysis
