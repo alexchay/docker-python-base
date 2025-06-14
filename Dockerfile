@@ -14,10 +14,10 @@ ENV USER_GID=${USER_GID}
 
 # add ca certificates
 COPY *.crt /usr/local/share/ca-certificates/
-RUN update-ca-certificates
 
 # create local group and user & switch to
 RUN \
+    update-ca-certificates \
     groupadd --gid ${USER_GID} ${GROUPNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
     && export HOME=/home/$USERNAME \
