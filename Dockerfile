@@ -18,7 +18,7 @@ COPY *.crt /usr/local/share/ca-certificates/
 # create local group and user & switch to
 RUN \
     update-ca-certificates \
-    groupadd --gid ${USER_GID} ${GROUPNAME} \
+    && groupadd --gid ${USER_GID} ${GROUPNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
     && export HOME=/home/$USERNAME \
     && chown -R :$GROUPNAME /usr/local/share/ca-certificates/
