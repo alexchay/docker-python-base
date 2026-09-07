@@ -16,7 +16,7 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix_json }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: fabasoad/data-format-converter-action@v1
         id: convert_matrix
         with:
@@ -38,7 +38,7 @@ jobs:
       max-parallel: 2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup build environment
         id: setup
