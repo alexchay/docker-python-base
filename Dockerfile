@@ -5,6 +5,8 @@ FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}
 LABEL maintainer="Alexander Chaykovskiy <alexchay@gmail.com>"
 
 ENV DEBIAN_FRONTEND=noninteractive
+# ignore warning "Potentially sensitive data should not be used in the `ARG` or `ENV` commands"
+# hadolint ignore=DL3064
 ENV USERNAME=appuser
 ENV GROUPNAME=appgroup
 ARG USER_UID=1010
